@@ -1,0 +1,13 @@
+{
+    "session_start": "2025-05-16T12:30:05.072593",
+    "likes": 0,
+    "comments": 0,
+    "follows": 0,
+    "feed_scrolls": 0,
+    "reels_watched": 0,
+    "hashtags_explored": 0,
+    "errors": [
+        "Reels watching error: 'Client' object has no attribute 'reels_feed'"
+    ],
+    "session_end": "2025-05-16T12:30:15.587099"
+}
