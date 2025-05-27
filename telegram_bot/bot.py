@@ -1,3 +1,5 @@
+# telegram_bot/bot.py - ИСПРАВЛЕННАЯ ВЕРСИЯ
+
 import logging
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler, ConversationHandler
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ParseMode
@@ -21,8 +23,6 @@ from telegram_bot.handlers.warming_handlers import (
     warming_status as show_warming_status,
     warming_settings as show_warming_settings
 )
-#from instagram.clip_upload_patch import *
-
 
 logger = logging.getLogger(__name__)
 
@@ -33,310 +33,389 @@ def start_handler(update, context):
     user = update.effective_user
 
     keyboard = [
-    [InlineKeyboardButton("👤 Аккаунты", callback_data='menu_accounts')],
-    [InlineKeyboardButton("📝 Задачи", callback_data='menu_tasks')],
-    [InlineKeyboardButton("🔄 Прокси", callback_data='menu_proxy')],
-    [InlineKeyboardButton("🔥 Прогрев", callback_data='menu_warming')],
-    [InlineKeyboardButton("ℹ️ Помощь", callback_data='menu_help')]
+        [InlineKeyboardButton("👤 Аккаунты", callback_data='menu_accounts')],
+        [InlineKeyboardButton("📝 Задачи", callback_data='menu_tasks')],
+        [InlineKeyboardButton("🔄 Прокси", callback_data='menu_proxy')],
+        [InlineKeyboardButton("🔥 Прогрев", callback_data='menu_warming')],
+        [InlineKeyboardButton("ℹ️ Помощь", callback_data='menu_help')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     update.message.reply_text(
-    f"Привет, {user.first_name}! Я бот для автоматической загрузки контента в Instagram.\n\n"
-    f"Выберите раздел из меню ниже или используйте /help для получения списка доступных команд.",
-    reply_markup=reply_markup
+        f"Привет, {user.first_name}! Я бот для автоматической загрузки контента в Instagram.\n\n"
+        f"Выберите раздел из меню ниже или используйте /help для получения списка доступных команд.",
+        reply_markup=reply_markup
     )
 
-def help_handler(update, context):
-    help_text = """
-*Доступные команды:*
-
-*Аккаунты:*
-/accounts - Меню управления аккаунтами
-/add_account - Добавить новый аккаунт Instagram
-/upload_accounts - Загрузить несколько аккаунтов из файла
-/list_accounts - Показать список аккаунтов
-/profile_setup - Настроить профиль аккаунта
-
-*Задачи:*
-/tasks - Меню управления задачами
-/publish_now - Опубликовать контент сейчас
-/schedule_publish - Запланировать публикацию
-
-*Прокси:*
-/proxy - Меню управления прокси
-/add_proxy - Добавить новый прокси
-/distribute_proxies - Распределить прокси по аккаунтам
-/list_proxies - Показать список прокси
-
-*Прогрев аккаунтов:*
-/warming - Меню прогрева аккаунтов
-/warm_account - Прогреть аккаунт
-/warming_stats - Статистика прогрева
-
-/cancel - Отменить текущую операцию
-    """
-
+def get_main_menu_keyboard():
+    """Возвращает главное меню"""
     keyboard = [
-    [InlineKeyboardButton("👤 Аккаунты", callback_data='menu_accounts')],
-    [InlineKeyboardButton("📝 Задачи", callback_data='menu_tasks')],
-    [InlineKeyboardButton("🔄 Прокси", callback_data='menu_proxy')],
-    [InlineKeyboardButton("🔥 Прогрев", callback_data='menu_warming')],
-    [InlineKeyboardButton("🔙 Главное меню", callback_data='back_to_main')]
+        [InlineKeyboardButton("👤 Аккаунты", callback_data='menu_accounts')],
+        [InlineKeyboardButton("📝 Задачи", callback_data='menu_tasks')],
+        [InlineKeyboardButton("🔄 Прокси", callback_data='menu_proxy')],
+        [InlineKeyboardButton("🔥 Прогрев", callback_data='menu_warming')],
+        [InlineKeyboardButton("ℹ️ Помощь", callback_data='menu_help')]
     ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-
-    update.message.reply_text(help_text, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
-
-def cancel_handler(update, context):
-    keyboard = [[InlineKeyboardButton("🔙 Главное меню", callback_data='back_to_main')]]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-
-    update.message.reply_text(
-    "Операция отменена.",
-    reply_markup=reply_markup
-    )
-    return ConversationHandler.END
+    return InlineKeyboardMarkup(keyboard)
 
 def callback_handler(update, context):
+    """ИСПРАВЛЕННЫЙ обработчик для кнопок"""
     query = update.callback_query
     query.answer()
 
     try:
-        if query.data == 'menu_accounts':
+        # ГЛАВНОЕ МЕНЮ
+        if query.data == 'back_to_main' or query.data == 'main_menu':
             keyboard = [
-            [InlineKeyboardButton("➕ Добавить аккаунт", callback_data='add_account')],
-            [InlineKeyboardButton("📥 Массовая загрузка аккаунтов", callback_data='bulk_add_accounts')],
-            [InlineKeyboardButton("📋 Список аккаунтов", callback_data='list_accounts')],
-            [InlineKeyboardButton("📊 Статистика сессий", callback_data='refresh_session_stats')],
-            [InlineKeyboardButton("📤 Загрузить аккаунты", callback_data='upload_accounts')],
-            [InlineKeyboardButton("⚙️ Настройка профиля", callback_data='profile_setup')],
-            [InlineKeyboardButton("🔥 Прогрев аккаунтов", callback_data='warming_menu')],
-            [InlineKeyboardButton("🔙 Назад", callback_data='back_to_main')]
+                [InlineKeyboardButton("👤 Аккаунты", callback_data='menu_accounts')],
+                [InlineKeyboardButton("📝 Задачи", callback_data='menu_tasks')],
+                [InlineKeyboardButton("🔄 Прокси", callback_data='menu_proxy')],
+                [InlineKeyboardButton("🔥 Прогрев", callback_data='menu_warming')],
+                [InlineKeyboardButton("ℹ️ Помощь", callback_data='menu_help')]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
 
             query.edit_message_text(
-            text="🔧 *Меню управления аккаунтами*\n\n"
-            "Выберите действие из списка ниже:",
-            reply_markup=reply_markup,
-            parse_mode=ParseMode.MARKDOWN
+                "🏠 Главное меню\n\n"
+                "Выберите раздел из меню ниже:",
+                reply_markup=reply_markup
             )
 
-        elif query.data == 'menu_tasks':
+        # МЕНЮ АККАУНТОВ
+        elif query.data == 'menu_accounts' or query.data == 'accounts_menu':
             keyboard = [
-            [InlineKeyboardButton("📤 Опубликовать сейчас", callback_data='publish_now')],
-            [InlineKeyboardButton("⏰ Запланировать публикацию", callback_data='schedule_publish')],
-            [InlineKeyboardButton("📊 Статистика публикаций", callback_data='publication_stats')],
-            [InlineKeyboardButton("🔙 Назад", callback_data='back_to_main')]
+                [InlineKeyboardButton("➕ Добавить аккаунт", callback_data='add_account')],
+                [InlineKeyboardButton("📥 Массовая загрузка", callback_data='bulk_add_accounts')],
+                [InlineKeyboardButton("📋 Список аккаунтов", callback_data='list_accounts')],
+                [InlineKeyboardButton("📊 Статистика сессий", callback_data='refresh_session_stats')],
+                [InlineKeyboardButton("📤 Загрузить файл", callback_data='upload_accounts')],
+                [InlineKeyboardButton("⚙️ Настройка профиля", callback_data='profile_setup')],
+                [InlineKeyboardButton("🔙 Главное меню", callback_data='back_to_main')]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
 
             query.edit_message_text(
-            text="📝 *Меню управления задачами*\n\n"
-            "Выберите действие из списка ниже:",
-            reply_markup=reply_markup,
-            parse_mode=ParseMode.MARKDOWN
+                "👤 *Меню управления аккаунтами*\n\n"
+                "Выберите действие:",
+                reply_markup=reply_markup,
+                parse_mode=ParseMode.MARKDOWN
             )
 
-        elif query.data == 'menu_proxy':
+        # МЕНЮ ЗАДАЧ
+        elif query.data == 'menu_tasks' or query.data == 'tasks_menu':
             keyboard = [
-            [InlineKeyboardButton("➕ Добавить прокси", callback_data='add_proxy')],
-            [InlineKeyboardButton("📋 Список прокси", callback_data='list_proxies')],
-            [InlineKeyboardButton("🔄 Распределить прокси", callback_data='distribute_proxies')],
-            [InlineKeyboardButton("🔙 Назад", callback_data='back_to_main')]
+                [InlineKeyboardButton("📤 Опубликовать сейчас", callback_data='publish_now')],
+                [InlineKeyboardButton("⏰ Запланировать", callback_data='schedule_publish')],
+                [InlineKeyboardButton("📊 Статистика", callback_data='publication_stats')],
+                [InlineKeyboardButton("🔙 Главное меню", callback_data='back_to_main')]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
 
             query.edit_message_text(
-            text="🔄 *Меню управления прокси*\n\n"
-            "Выберите действие из списка ниже:",
-            reply_markup=reply_markup,
-            parse_mode=ParseMode.MARKDOWN
+                "📝 *Меню управления задачами*\n\n"
+                "Выберите действие:",
+                reply_markup=reply_markup,
+                parse_mode=ParseMode.MARKDOWN
             )
 
-        elif query.data == 'menu_warming':
+        # МЕНЮ ПРОКСИ
+        elif query.data == 'menu_proxy' or query.data == 'proxy_menu':
             keyboard = [
-            [InlineKeyboardButton("🔥 Прогреть аккаунт", callback_data='warm_account')],
-            [InlineKeyboardButton("📊 Статистика прогрева", callback_data='warming_stats')],
-            [InlineKeyboardButton("⚙️ Настройки прогрева", callback_data='warming_settings')],
-            [InlineKeyboardButton("🔙 Назад", callback_data='back_to_main')]
+                [InlineKeyboardButton("➕ Добавить прокси", callback_data='add_proxy')],
+                [InlineKeyboardButton("📋 Список прокси", callback_data='list_proxies')],
+                [InlineKeyboardButton("🔄 Распределить", callback_data='distribute_proxies')],
+                [InlineKeyboardButton("🔙 Главное меню", callback_data='back_to_main')]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
 
             query.edit_message_text(
-            text="🔥 *Меню прогрева аккаунтов*\n\n"
-            "Выберите действие из списка ниже:",
-            reply_markup=reply_markup,
-            parse_mode=ParseMode.MARKDOWN
+                "🔄 *Меню управления прокси*\n\n"
+                "Выберите действие:",
+                reply_markup=reply_markup,
+                parse_mode=ParseMode.MARKDOWN
             )
 
+        # МЕНЮ ПРОГРЕВА
+        elif query.data == 'menu_warming' or query.data == 'warming_menu':
+            keyboard = [
+                [InlineKeyboardButton("🔥 Начать прогрев", callback_data='start_warming')],
+                [InlineKeyboardButton("❄️ Остановить прогрев", callback_data='stop_warming')],
+                [InlineKeyboardButton("📊 Статус прогрева", callback_data='warming_stats')],
+                [InlineKeyboardButton("⚙️ Настройки", callback_data='warming_settings_menu')],
+                [InlineKeyboardButton("🔙 Главное меню", callback_data='back_to_main')]
+            ]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+
+            query.edit_message_text(
+                "🔥 *Меню прогрева аккаунтов*\n\n"
+                "Выберите действие:",
+                reply_markup=reply_markup,
+                parse_mode=ParseMode.MARKDOWN
+            )
+
+        # МЕНЮ ПОМОЩИ
         elif query.data == 'menu_help':
             help_text = """
-*Доступные команды:*
+*📋 Доступные команды:*
 
-*Аккаунты:*
-/accounts - Меню управления аккаунтами
-/add_account - Добавить новый аккаунт Instagram
-/upload_accounts - Загрузить несколько аккаунтов из файла
-/list_accounts - Показать список аккаунтов
-/profile_setup - Настроить профиль аккаунта
+*👤 Аккаунты:*
+• /accounts - Меню управления аккаунтами
+• /add_account - Добавить новый аккаунт
+• /list_accounts - Показать список аккаунтов
 
-*Задачи:*
-/tasks - Меню управления задачами
-/publish_now - Опубликовать контент сейчас
-/schedule_publish - Запланировать публикацию
+*📝 Задачи:*
+• /tasks - Меню управления задачами
+• /publish_now - Опубликовать контент сейчас
 
-*Прокси:*
-/proxy - Меню управления прокси
-/add_proxy - Добавить новый прокси
-/distribute_proxies - Распределить прокси по аккаунтам
-/list_proxies - Показать список прокси
+*🔄 Прокси:*
+• /proxy - Меню управления прокси
+• /add_proxy - Добавить новый прокси
 
-*Прогрев аккаунтов:*
-/warming - Меню прогрева аккаунтов
-/warm_account - Прогреть аккаунт
-/warming_stats - Статистика прогрева
+*🔥 Прогрев:*
+• /warming - Меню прогрева аккаунтов
+• /warm_account - Прогреть аккаунт
 
-/cancel - Отменить текущую операцию
+*🛠 Общие:*
+• /cancel - Отменить текущую операцию
+• /help - Показать эту справку
             """
 
             keyboard = [
-            [InlineKeyboardButton("🔙 Назад", callback_data='back_to_main')]
+                [InlineKeyboardButton("🔙 Главное меню", callback_data='back_to_main')]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
 
             query.edit_message_text(
-            text=help_text,
-            reply_markup=reply_markup,
-            parse_mode=ParseMode.MARKDOWN
+                help_text,
+                reply_markup=reply_markup,
+                parse_mode=ParseMode.MARKDOWN
             )
 
-        elif query.data == 'back_to_main':
-            keyboard = [
-            [InlineKeyboardButton("👤 Аккаунты", callback_data='menu_accounts')],
-            [InlineKeyboardButton("📝 Задачи", callback_data='menu_tasks')],
-            [InlineKeyboardButton("🔄 Прокси", callback_data='menu_proxy')],
-            [InlineKeyboardButton("🔥 Прогрев", callback_data='menu_warming')],
-            [InlineKeyboardButton("ℹ️ Помощь", callback_data='menu_help')]
-            ]
-            reply_markup = InlineKeyboardMarkup(keyboard)
-
-            query.edit_message_text(
-            text="Главное меню бота для автоматической загрузки контента в Instagram.\n\n"
-            "Выберите раздел из меню ниже или используйте /help для получения списка доступных команд.",
-            reply_markup=reply_markup
-            )
-
-        # Обработчики для прогрева аккаунтов
-        elif query.data == 'warm_account':
-            return select_account_for_warming(update, context)
-        elif query.data == 'warming_stats':
-            return show_warming_status(update, context)
-        elif query.data == 'warming_settings':
-            return show_warming_settings(update, context)
-        elif query.data.startswith('warming_account_'):
-            return select_account_for_warming(update, context)
-        elif query.data.startswith('warming_default_'):
-            return start_account_warming(update, context)
-        elif query.data == 'warming_menu':
-            return warming_menu(update, context)
-
-        elif query.data == 'upload_accounts':
-            # Отправляем новое сообщение вместо редактирования текущего
-            keyboard = [[InlineKeyboardButton("🔙 Назад", callback_data='menu_accounts')]]
-            reply_markup = InlineKeyboardMarkup(keyboard)
-
-            query.edit_message_text(
-            "Отправьте TXT файл с аккаунтами Instagram.\n\n"
-            "Формат файла:\n"
-            "username:password\n"
-            "username:password\n"
-            "...\n\n"
-            "Каждый аккаунт должен быть на новой строке в формате username:password",
-            reply_markup=reply_markup
-            )
-
-            # Устанавливаем состояние для ожидания файла
-            context.user_data['waiting_for_accounts_file'] = True
-            return WAITING_ACCOUNTS_FILE
-
-        elif query.data == 'list_accounts':
-            # Вызываем обработчик списка аккаунтов
-            list_accounts_handler(update, context)
-
-        elif query.data == 'refresh_session_stats':
-            # Вызываем обработчик статистики сессий
-            get_session_stats_handler(update, context)
+        # ДЕЙСТВИЯ С АККАУНТАМИ
+        elif query.data == 'add_account':
+            # Переход к добавлению аккаунта
+            return add_account(update, context)
 
         elif query.data == 'bulk_add_accounts':
             keyboard = [[InlineKeyboardButton("🔙 Назад", callback_data='menu_accounts')]]
             reply_markup = InlineKeyboardMarkup(keyboard)
 
             query.edit_message_text(
-            "📥 *Массовая загрузка аккаунтов Instagram*\n\n"
-            "Отправьте список аккаунтов в формате:\n"
-            "`username:password:email:email_password`\n\n"
-            "Каждый аккаунт должен быть на новой строке.\n\n"
-            "Пример:\n"
-            "`user1:pass1:email1@example.com:email_pass1`\n"
-            "`user2:pass2:email2@example.com:email_pass2`\n\n"
-            "Или используйте команду:\n"
-            "`/bulk_add_accounts`\n"
-            "и укажите список аккаунтов после команды.",
-            parse_mode=ParseMode.MARKDOWN,
-            reply_markup=reply_markup
+                "📥 *Массовая загрузка аккаунтов*\n\n"
+                "Отправьте список аккаунтов в формате:\n"
+                "`username:password:email:email_password`\n\n"
+                "Каждый аккаунт на новой строке.",
+                parse_mode=ParseMode.MARKDOWN,
+                reply_markup=reply_markup
             )
-
-            # Устанавливаем состояние для ожидания списка аккаунтов
             context.user_data['waiting_for_bulk_accounts'] = True
             return BULK_ADD_ACCOUNTS
 
+        elif query.data == 'list_accounts':
+            return list_accounts_handler(update, context)
+
+        elif query.data == 'refresh_session_stats':
+            return get_session_stats_handler(update, context)
+
+        elif query.data == 'upload_accounts':
+            keyboard = [[InlineKeyboardButton("🔙 Назад", callback_data='menu_accounts')]]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+
+            query.edit_message_text(
+                "📤 *Загрузка аккаунтов из файла*\n\n"
+                "Отправьте TXT файл с аккаунтами в формате:\n"
+                "`username:password`\n"
+                "или\n"
+                "`username:password:email:email_password`\n\n"
+                "Каждый аккаунт на новой строке.",
+                reply_markup=reply_markup,
+                parse_mode=ParseMode.MARKDOWN
+            )
+            context.user_data['waiting_for_accounts_file'] = True
+            return WAITING_ACCOUNTS_FILE
+
         elif query.data == 'profile_setup':
-            # Вызываем обработчик настройки профиля
             return profile_setup_menu(update, context)
 
-        elif query.data in ['publication_stats', 'add_proxy', 'list_proxies', 'distribute_proxies']:
+        # ДЕЙСТВИЯ С ПРОГРЕВОМ
+        elif query.data == 'start_warming':
+            return select_account_for_warming(update, context)
+
+        elif query.data == 'warming_stats':
+            return show_warming_status(update, context)
+
+        elif query.data == 'warming_settings_menu':
+            return show_warming_settings(update, context)
+
+        elif query.data.startswith('warming_account_'):
+            return select_account_for_warming(update, context)
+
+        elif query.data.startswith('warming_default_'):
+            return start_account_warming(update, context)
+
+        # ДЕЙСТВИЯ С ЗАДАЧАМИ
+        elif query.data == 'publish_now':
+            keyboard = [
+                [InlineKeyboardButton("📹 Reels", callback_data='publish_type_reel')],
+                [InlineKeyboardButton("🖼️ Фото", callback_data='publish_type_post')],
+                [InlineKeyboardButton("🧩 Мозаика", callback_data='publish_type_mosaic')],
+                [InlineKeyboardButton("🔙 Назад", callback_data='menu_tasks')]
+            ]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+
             query.edit_message_text(
-            text=f"Функция '{query.data}' находится в разработке.\n\n"
-            "Пожалуйста, попробуйте позже.",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Назад", callback_data='back_to_main')]])
+                "📤 *Выберите тип публикации:*",
+                reply_markup=reply_markup,
+                parse_mode=ParseMode.MARKDOWN
             )
 
+        elif query.data == 'schedule_publish':
+            query.edit_message_text(
+                "⏰ *Запланированная публикация*\n\n"
+                "Функция находится в разработке.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("🔙 Назад", callback_data='menu_tasks')]
+                ]),
+                parse_mode=ParseMode.MARKDOWN
+            )
+
+        elif query.data == 'publication_stats':
+            query.edit_message_text(
+                "📊 *Статистика публикаций*\n\n"
+                "Функция находится в разработке.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("🔙 Назад", callback_data='menu_tasks')]
+                ]),
+                parse_mode=ParseMode.MARKDOWN
+            )
+
+        # ДЕЙСТВИЯ С ПРОКСИ
+        elif query.data == 'add_proxy':
+            keyboard = [[InlineKeyboardButton("🔙 Назад", callback_data='menu_proxy')]]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+
+            query.edit_message_text(
+                "➕ *Добавление прокси*\n\n"
+                "Введите данные прокси в формате:\n"
+                "`протокол://логин:пароль@хост:порт`\n\n"
+                "Пример:\n"
+                "`http://user:pass@1.2.3.4:8080`\n"
+                "или без авторизации:\n"
+                "`http://1.2.3.4:8080`",
+                reply_markup=reply_markup,
+                parse_mode=ParseMode.MARKDOWN
+            )
+
+        elif query.data == 'list_proxies':
+            query.edit_message_text(
+                "📋 *Список прокси*\n\n"
+                "Функция находится в разработке.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("🔙 Назад", callback_data='menu_proxy')]
+                ]),
+                parse_mode=ParseMode.MARKDOWN
+            )
+
+        elif query.data == 'distribute_proxies':
+            query.edit_message_text(
+                "🔄 *Распределение прокси*\n\n"
+                "Функция находится в разработке.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("🔙 Назад", callback_data='menu_proxy')]
+                ]),
+                parse_mode=ParseMode.MARKDOWN
+            )
+
+        # НЕИЗВЕСТНЫЕ CALLBACK DATA
         else:
-            # Другие callback_data обрабатываются в соответствующих обработчиках
-            pass
+            logger.warning(f"Неизвестный callback_data: {query.data}")
+            query.edit_message_text(
+                "❌ Неизвестная команда. Возвращаюсь в главное меню.",
+                reply_markup=get_main_menu_keyboard()
+            )
+
     except Exception as e:
         logger.error(f"Ошибка в callback_handler: {e}")
         try:
             query.edit_message_text(
-                "Произошла ошибка при обработке вашего запроса. Пожалуйста, попробуйте еще раз.",
-                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Назад", callback_data='back_to_main')]])
+                "❌ Произошла ошибка. Возвращаюсь в главное меню.",
+                reply_markup=get_main_menu_keyboard()
             )
         except Exception as inner_e:
             logger.error(f"Не удалось отправить сообщение об ошибке: {inner_e}")
 
 def text_handler(update, context):
+    """Обработчик текстовых сообщений"""
     keyboard = [
-    [InlineKeyboardButton("👤 Аккаунты", callback_data='menu_accounts')],
-    [InlineKeyboardButton("📝 Задачи", callback_data='menu_tasks')],
-    [InlineKeyboardButton("🔄 Прокси", callback_data='menu_proxy')],
-    [InlineKeyboardButton("🔥 Прогрев", callback_data='menu_warming')],
-    [InlineKeyboardButton("ℹ️ Помощь", callback_data='menu_help')]
+        [InlineKeyboardButton("👤 Аккаунты", callback_data='menu_accounts')],
+        [InlineKeyboardButton("📝 Задачи", callback_data='menu_tasks')],
+        [InlineKeyboardButton("🔄 Прокси", callback_data='menu_proxy')],
+        [InlineKeyboardButton("🔥 Прогрев", callback_data='menu_warming')],
+        [InlineKeyboardButton("ℹ️ Помощь", callback_data='menu_help')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     update.message.reply_text(
-    "Я понимаю только команды. Используйте /help для получения списка доступных команд или выберите раздел из меню ниже:",
-    reply_markup=reply_markup
+        "Я понимаю только команды. Используйте кнопки меню или команды:",
+        reply_markup=reply_markup
     )
+
+def help_handler(update, context):
+    """Обработчик команды /help"""
+    help_text = """
+*📋 Доступные команды:*
+
+*👤 Аккаунты:*
+• /accounts - Меню управления аккаунтами
+• /add_account - Добавить новый аккаунт
+• /list_accounts - Показать список аккаунтов
+
+*📝 Задачи:*
+• /tasks - Меню управления задачами
+• /publish_now - Опубликовать контент сейчас
+
+*🔄 Прокси:*
+• /proxy - Меню управления прокси
+• /add_proxy - Добавить новый прокси
+
+*🔥 Прогрев:*
+• /warming - Меню прогрева аккаунтов
+• /warm_account - Прогреть аккаунт
+
+*🛠 Общие:*
+• /cancel - Отменить текущую операцию
+• /help - Показать эту справку
+    """
+
+    keyboard = [
+        [InlineKeyboardButton("🏠 Главное меню", callback_data='back_to_main')]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    update.message.reply_text(
+        help_text,
+        parse_mode=ParseMode.MARKDOWN,
+        reply_markup=reply_markup
+    )
+
+def cancel_handler(update, context):
+    """Обработчик команды /cancel"""
+    keyboard = [
+        [InlineKeyboardButton("🏠 Главное меню", callback_data='back_to_main')]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    update.message.reply_text(
+        "❌ Операция отменена.",
+        reply_markup=reply_markup
+    )
+    return ConversationHandler.END
 
 def error_handler(update, context):
     """Обрабатывает ошибки"""
-    # Проверяем, является ли ошибка "Query is too old"
     if "Query is too old" in str(context.error):
         logger.warning(f"Устаревший запрос: {update}")
-        return  # Просто игнорируем эту ошибку
+        return
 
     logger.error(f"Ошибка при обработке обновления {update}: {context.error}")
 
@@ -344,13 +423,14 @@ def error_handler(update, context):
         try:
             context.bot.send_message(
                 chat_id=update.effective_chat.id,
-                text="Произошла ошибка при обработке вашего запроса. Пожалуйста, попробуйте еще раз.",
-                parse_mode=ParseMode.MARKDOWN
+                text="❌ Произошла ошибка. Попробуйте еще раз.",
+                reply_markup=get_main_menu_keyboard()
             )
         except Exception as e:
             logger.error(f"Не удалось отправить сообщение об ошибке: {e}")
 
 def setup_bot(updater):
+    """ИСПРАВЛЕННАЯ настройка бота"""
     dp = updater.dispatcher
 
     # Основные обработчики
@@ -358,7 +438,13 @@ def setup_bot(updater):
     dp.add_handler(CommandHandler("help", help_handler))
     dp.add_handler(CommandHandler("cancel", cancel_handler))
 
-    # Регистрируем ConversationHandler для добавления аккаунта
+    # Команды для быстрого доступа
+    dp.add_handler(CommandHandler("accounts", lambda u, c: callback_handler_command(u, c, 'menu_accounts')))
+    dp.add_handler(CommandHandler("tasks", lambda u, c: callback_handler_command(u, c, 'menu_tasks')))
+    dp.add_handler(CommandHandler("proxy", lambda u, c: callback_handler_command(u, c, 'menu_proxy')))
+    dp.add_handler(CommandHandler("warming", lambda u, c: callback_handler_command(u, c, 'menu_warming')))
+
+    # ConversationHandler для добавления аккаунта
     add_account_conv_handler = ConversationHandler(
         entry_points=[
             CommandHandler("add_account", add_account),
@@ -371,95 +457,65 @@ def setup_bot(updater):
             ENTER_EMAIL_PASSWORD: [MessageHandler(Filters.text & ~Filters.command, enter_email_password)],
             CONFIRM_ACCOUNT: [CallbackQueryHandler(confirm_add_account, pattern='^confirm_add_account$')],
             ENTER_VERIFICATION_CODE: [MessageHandler(Filters.text & ~Filters.command, enter_verification_code)]
-            # Удалите строку с BULK_ADD_ACCOUNTS
         },
         fallbacks=[
             CallbackQueryHandler(cancel_add_account, pattern='^cancel_add_account$'),
-            CallbackQueryHandler(lambda u, c: ConversationHandler.END, pattern='^menu_accounts$'),
+            CallbackQueryHandler(lambda u, c: callback_handler_command(u, c, 'menu_accounts'), pattern='^menu_accounts$'),
             CommandHandler("cancel", cancel_handler)
         ]
     )
 
     dp.add_handler(add_account_conv_handler)
 
-    # Регистрируем ConversationHandler для прогрева аккаунтов
-    warming_conv_handler = ConversationHandler(
-        entry_points=[
-            CommandHandler("warming", warming_menu),
-            CommandHandler("warm_account", select_account_for_warming),
-            CallbackQueryHandler(warming_menu, pattern='^menu_warming$'),
-            CallbackQueryHandler(select_account_for_warming, pattern='^warm_account$')
-        ],
-        states={
-            WARMING_MENU: [
-                CallbackQueryHandler(select_account_for_warming, pattern='^warm_account$'),
-                CallbackQueryHandler(show_warming_status, pattern='^warming_stats$'),
-                CallbackQueryHandler(show_warming_settings, pattern='^warming_settings$'),
-                CallbackQueryHandler(lambda u, c: ConversationHandler.END, pattern='^back_to_main$')
-            ],
-            WARMING_ACCOUNT_SELECTION: [
-                CallbackQueryHandler(start_account_warming, pattern='^warm_account_'),
-                CallbackQueryHandler(warming_menu, pattern='^back_to_warming_menu$')
-            ],
-            WARMING_SETTINGS: [
-                CallbackQueryHandler(warming_menu, pattern='^back_to_warming_menu$')
-            ]
-        },
-        fallbacks=[
-            CommandHandler("cancel", cancel_handler),
-            CallbackQueryHandler(lambda u, c: ConversationHandler.END, pattern='^back_to_main$')
-        ]
-    )
-
-    dp.add_handler(warming_conv_handler)
-
-    # Добавляем обработчик для массовой загрузки аккаунтов
-    dp.add_handler(CommandHandler("bulk_add_accounts", bulk_add_accounts_command, pass_args=True))
-
-    # Добавляем все обработчики из модулей
+    # Регистрируем все остальные обработчики
     for handler in get_all_handlers():
         dp.add_handler(handler)
 
-    # Добавляем обработчики для настройки профиля
     for handler in get_profile_handlers():
         dp.add_handler(handler)
 
-    # Добавляем обработчики для прогрева
     for handler in get_warming_handlers():
         dp.add_handler(handler)
 
-    # Добавляем обработчик для файлов с аккаунтами
+    # Обработчик файлов с аккаунтами
     dp.add_handler(MessageHandler(
         Filters.document.file_extension("txt"),
         lambda update, context: bulk_upload_accounts_file(update, context) if context.user_data.get('waiting_for_accounts_file', False) else None
     ))
 
-    # Обработчик callback-запросов
+    # Основной обработчик callback-запросов
     dp.add_handler(CallbackQueryHandler(callback_handler))
 
-    # Добавляем обработчик для статистики сессий
-    dp.add_handler(CallbackQueryHandler(get_session_stats_handler, pattern='^refresh_session_stats$'))
-
-    # Добавляем обработчик для кодов подтверждения
-    from telegram_bot.handlers.account_handlers import verification_code_handler
-    dp.add_handler(MessageHandler(
-        Filters.regex(r'^\d{6}$') & ~Filters.command,
-        verification_code_handler
-    ))
-
-    # Добавляем обработчик для повтора задач
+    # Обработчик для повтора задач
     dp.add_handler(CallbackQueryHandler(retry_task_callback, pattern=r'^retry_task_\d+$'))
 
-    # Обработчик текстовых сообщений (должен быть после обработчика кодов)
-    # Добавляем обработчик для массовой загрузки аккаунтов через текст
+    # Обработчик текстовых сообщений
     dp.add_handler(MessageHandler(
         Filters.text & ~Filters.command,
         lambda update, context: bulk_add_accounts_text(update, context) if context.user_data.get('waiting_for_bulk_accounts', False) else text_handler(update, context)
     ))
 
-    dp.add_handler(CommandHandler("warming", lambda update, context: warming_menu(update, context)))
-
     # Обработчик ошибок
     dp.add_error_handler(error_handler)
 
-    logger.info("Бот настроен и готов к работе")
+    logger.info("Бот настроен с исправленной навигацией")
+
+def callback_handler_command(update, context, callback_data):
+    """Вспомогательная функция для обработки команд как callback"""
+    # Создаем фиктивный callback_query
+    class FakeQuery:
+        def __init__(self, data):
+            self.data = data
+        def answer(self):
+            pass
+        def edit_message_text(self, *args, **kwargs):
+            update.message.reply_text(*args, **kwargs)
+
+    # Временно заменяем callback_query
+    original_query = getattr(update, 'callback_query', None)
+    update.callback_query = FakeQuery(callback_data)
+    
+    try:
+        callback_handler(update, context)
+    finally:
+        update.callback_query = original_query
